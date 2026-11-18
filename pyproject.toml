@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "revintel"
+version = "0.1.0"
+description = "End-to-end revenue & churn intelligence platform for a B2B SaaS business"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Samiksha Paturde" }]
+license = { text = "MIT" }
+
+[project.scripts]
+revintel = "revintel.pipeline:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["B008", "SIM108"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"

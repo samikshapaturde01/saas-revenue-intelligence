@@ -1,0 +1,26 @@
+# data & build outputs
+data/
+artifacts/
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+logs/
+*.duckdb
+*.duckdb.wal
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# editors / os
+.vscode/
+.idea/
+.DS_Store
+.env

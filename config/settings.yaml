@@ -1,0 +1,22 @@
+# Central configuration for the whole platform.
+# Any value can be overridden with an environment variable, e.g.
+#   REVINTEL_SIMULATION__BASE_SIGNUPS_PER_MONTH=10  (used in CI for a fast run)
+
+simulation:
+  seed: 42
+  start_date: "2024-01-01"
+  n_months: 33                 # Jan 2024 -> Sep 2026
+  base_signups_per_month: 70
+  monthly_growth: 0.035
+
+paths:
+  landing: data/landing
+  warehouse: data/warehouse/revintel.duckdb
+  artifacts: artifacts
+  contracts: config/contracts.yaml
+
+model:
+  horizon_months: 3            # predict churn within the next N months
+  validation_months: 6         # most recent snapshot months held out for validation
+  min_tenure_months: 1
+  random_state: 7
