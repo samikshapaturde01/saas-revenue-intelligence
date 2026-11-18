@@ -14,7 +14,7 @@ import json
 import logging
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -108,7 +108,7 @@ class Loader:
         return row is not None
 
     def _audit(self, **kw: Any) -> None:
-        kw.setdefault("loaded_at", datetime.now(timezone.utc))
+        kw.setdefault("loaded_at", datetime.now(UTC))
         cols = ", ".join(kw)
         self.con.execute(
             f"insert into meta.load_audit ({cols}) values ({', '.join('?' * len(kw))})",
@@ -140,7 +140,7 @@ class Loader:
                 json.dumps(r, default=str)
                 for r in rejected.drop(columns="_reject_reason").to_dict(orient="records")
             ],
-            "quarantined_at": datetime.now(timezone.utc),
+            "quarantined_at": datetime.now(UTC),
         })
         self.con.register("_q", q)
         self.con.execute("insert into meta.quarantine select * from _q")
@@ -173,7 +173,7 @@ class Loader:
             raw["_source_file"] = rel
             raw["_file_hash"] = file_hash
             raw["_batch_id"] = batch_id
-            raw["_loaded_at"] = datetime.now(timezone.utc)
+            raw["_loaded_at"] = datetime.now(UTC)
 
             self.con.execute("begin transaction")
             try:
@@ -193,7 +193,7 @@ class Loader:
             summary.rows_quarantined += len(result.rejected)
 
     def run(self) -> LoadSummary:
-        batch_id = datetime.now(timezone.utc).strftime("b%Y%m%dT%H%M%S%f")
+        batch_id = datetime.now(UTC).strftime("b%Y%m%dT%H%M%S%f")
         summary = LoadSummary()
         for source in self.contracts["sources"]:
             self.load_source(source, batch_id, summary)

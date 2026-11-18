@@ -25,7 +25,7 @@ import json
 import logging
 import shutil
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta, timezone
 from pathlib import Path
 
 import numpy as np
@@ -156,7 +156,7 @@ class SaaSSimulator:
     # ------------------------------------------------------------------ #
     def _ts(self, d: date) -> datetime:
         secs = int(self.rng.integers(7 * 3600, 20 * 3600))
-        return datetime(d.year, d.month, d.day, tzinfo=timezone.utc) + timedelta(seconds=secs)
+        return datetime(d.year, d.month, d.day, tzinfo=UTC) + timedelta(seconds=secs)
 
     def _event(self, acc: str, sub: str, etype: str, d: date, plan: int, seats: int,
                cycle: str, discount: float, reason: str | None = None) -> None:

@@ -18,7 +18,7 @@ revintel = "revintel.pipeline:main"
 where = ["src"]
 
 [tool.ruff]
-line-length = 110
+line-length = 120
 target-version = "py311"
 src = ["src", "tests"]
 
@@ -30,3 +30,4 @@ ignore = ["B008", "SIM108"]
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = "-q"
+markers = ["integration: end-to-end tests that run the full pipeline"]
