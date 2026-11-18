@@ -1,0 +1,91 @@
+# Data contracts for every source feed landing in data/landing/.
+#
+# The ingestion layer enforces these before anything reaches the warehouse:
+#   * a file missing a required column is rejected outright
+#   * individual rows that break a rule are quarantined (meta.quarantine) with the reason
+#   * if more than `max_reject_rate` of a file's rows fail, the whole file is rejected
+#     (circuit breaker - something is wrong upstream, don't load half a file)
+#
+# Raw tables keep values exactly as delivered (ELT); typing / cleaning happens in dbt staging.
+
+defaults:
+  max_reject_rate: 0.05
+
+sources:
+  accounts:
+    system: crm
+    pattern: "crm/extract_date=*/accounts.csv"
+    format: csv
+    load_mode: snapshot
+    columns:
+      account_id:          { type: string, required: true, regex: '^ACC-\d{6}$' }
+      company_name:        { type: string, required: true }
+      industry:            { type: string }
+      company_size:        { type: string, required: true, allowed: ["1-10", "11-50", "51-200", "201-1000", "1000+"] }
+      country:             { type: string, required: true }
+      acquisition_channel: { type: string, required: true, allowed: [organic, paid_search, partner, outbound_sales, referral] }
+      created_at:          { type: timestamp, required: true }
+      updated_at:          { type: timestamp, required: true }
+
+  subscription_events:
+    system: billing
+    pattern: "billing/extract_date=*/subscription_events_*.csv"
+    format: csv
+    load_mode: append
+    columns:
+      event_id:        { type: string, required: true, regex: '^EVT-\d{8}$' }
+      subscription_id: { type: string, required: true }
+      account_id:      { type: string, required: true }
+      event_type:      { type: string, required: true, allowed: [created, seats_changed, plan_changed, cancelled, reactivated] }
+      event_ts:        { type: timestamp, required: true }
+      plan:            { type: string, required: true, allowed: [starter, growth, enterprise] }
+      seats:           { type: integer, required: true, min: 1 }
+      billing_cycle:   { type: string, required: true, allowed: [monthly, annual] }
+      unit_price_usd:  { type: number, required: true, min: 0 }
+      discount_pct:    { type: number, required: true, min: 0, max: 1 }
+      cancel_reason:   { type: string }
+
+  invoices:
+    system: billing
+    pattern: "billing/extract_date=*/invoices_*.csv"
+    format: csv
+    load_mode: append
+    columns:
+      invoice_id:      { type: string, required: true }
+      account_id:      { type: string, required: true }
+      subscription_id: { type: string, required: true }
+      issued_at:       { type: timestamp, required: true }
+      due_at:          { type: timestamp, required: true }
+      currency:        { type: string, required: true, allowed: [USD, EUR, GBP] }
+      amount_cents:    { type: integer, required: true, min: 0 }
+      status:          { type: string, required: true, allowed: [paid, failed, void] }
+      attempt_count:   { type: integer, required: true, min: 1 }
+      paid_at:         { type: timestamp }
+
+  usage_daily:
+    system: product
+    pattern: "product/extract_date=*/usage_daily_*.parquet"
+    format: parquet
+    load_mode: append
+    columns:
+      account_id:          { type: string, required: true }
+      activity_date:       { type: timestamp, required: true }
+      active_users:        { type: integer, required: true, min: 0 }
+      sessions:            { type: integer, required: true, min: 0 }
+      core_feature_events: { type: integer, required: true, min: 0 }
+      integration_events:  { type: integer, required: true, min: 0 }
+
+  tickets:
+    system: support
+    pattern: "support/extract_date=*/tickets_*.jsonl"
+    format: jsonl
+    load_mode: append
+    columns:
+      ticket_id:              { type: string, required: true }
+      account_id:             { type: string, required: true }
+      created_at:             { type: timestamp, required: true }
+      priority:               { type: string, required: true, allowed: [low, normal, high, urgent], case_insensitive: true }
+      category:               { type: string, required: true }
+      first_response_minutes: { type: number, min: 0 }
+      resolved_at:            { type: timestamp }
+      csat_score:             { type: integer, min: 1, max: 5 }
