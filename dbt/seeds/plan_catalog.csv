@@ -1,0 +1,4 @@
+plan,plan_tier,list_price_per_seat_usd,includes_integrations
+starter,1,12.00,false
+growth,2,25.00,true
+enterprise,3,45.00,true

@@ -1,0 +1,8 @@
+revintel:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('REVINTEL_DB_PATH', '../data/warehouse/revintel.duckdb') }}"
+      schema: main
+      threads: 4

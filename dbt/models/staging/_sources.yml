@@ -1,0 +1,22 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Raw tables loaded by the contract-validated ingestion layer (values as delivered).
+    schema: raw
+    loaded_at_field: _loaded_at
+    config:
+      freshness:
+        warn_after: { count: 2, period: day }
+        error_after: { count: 7, period: day }
+    tables:
+      - name: accounts
+        description: Full CRM account snapshots. Contains stale duplicate versions of some accounts.
+      - name: subscription_events
+        description: Billing-system change log (created, seats/plan changes, cancellations, reactivations).
+      - name: invoices
+        description: Invoices in the customer's local currency.
+      - name: usage_daily
+        description: Daily product-usage rollups per account. Upstream occasionally re-sends rows.
+      - name: tickets
+        description: Helpdesk tickets. Timestamps arrive with mixed UTC offsets; priority casing varies.

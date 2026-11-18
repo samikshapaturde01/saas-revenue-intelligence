@@ -1,0 +1,65 @@
+version: 2
+
+models:
+  - name: stg_crm__accounts
+    description: Current CRM attributes per account (latest snapshot, latest version).
+    columns:
+      - name: account_id
+        data_tests: [unique, not_null]
+      - name: company_size
+        data_tests:
+          - accepted_values: { arguments: { values: ["1-10", "11-50", "51-200", "201-1000", "1000+"] } }
+      - name: country_code
+        data_tests:
+          - not_null
+          - accepted_values: { arguments: { values: [US, GB, DE, CA, IN, AU, FR, NL, ES] } }
+      - name: acquisition_channel
+        data_tests: [not_null]
+
+  - name: stg_billing__subscription_events
+    description: Subscription change log with MRR in effect after each event.
+    columns:
+      - name: event_id
+        data_tests: [unique, not_null]
+      - name: account_id
+        data_tests:
+          - not_null
+          - relationships: { arguments: { to: ref('stg_crm__accounts'), field: account_id } }
+      - name: event_type
+        data_tests:
+          - accepted_values: { arguments: { values: [created, seats_changed, plan_changed, cancelled, reactivated] } }
+      - name: mrr_usd
+        data_tests: [not_null, non_negative]
+
+  - name: stg_billing__invoices
+    description: Invoices with USD-converted amounts.
+    columns:
+      - name: invoice_id
+        data_tests: [unique, not_null]
+      - name: amount_usd
+        description: Invoice amount converted to USD with the issue month's FX rate.
+        data_tests: [not_null, non_negative]
+      - name: invoice_status
+        data_tests:
+          - accepted_values: { arguments: { values: [paid, failed, void] } }
+
+  - name: stg_product__usage_daily
+    description: Daily product usage per account (duplicates removed).
+    data_tests:
+      - unique_combination:
+          arguments: { columns: [account_id, activity_date] }
+    columns:
+      - name: active_users
+        data_tests: [not_null, non_negative]
+
+  - name: stg_support__tickets
+    description: Helpdesk tickets in UTC with normalised priority.
+    columns:
+      - name: ticket_id
+        data_tests: [unique, not_null]
+      - name: priority
+        data_tests:
+          - accepted_values: { arguments: { values: [low, normal, high, urgent] } }
+      - name: csat_score
+        data_tests:
+          - value_between: { arguments: { min_value: 1, max_value: 5 } }

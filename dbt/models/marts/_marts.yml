@@ -1,0 +1,66 @@
+version: 2
+
+models:
+  - name: fct_mrr_movements
+    description: >
+      Account-month MRR movements classified as new, expansion, contraction, churn,
+      reactivation or retained. Grain: one row per account per month in which the account
+      had MRR at the start or end of the month.
+    columns:
+      - name: account_month_id
+        data_tests: [unique, not_null]
+      - name: account_id
+        data_tests:
+          - not_null
+          - relationships: { arguments: { to: ref('dim_accounts'), field: account_id } }
+      - name: movement_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments: { values: [new, expansion, contraction, churn, reactivation, retained] }
+      - name: mrr_usd
+        data_tests: [not_null, non_negative]
+
+  - name: metrics_mrr_monthly
+    description: Company-level MRR waterfall and retention KPIs per month.
+    columns:
+      - name: month_start
+        data_tests: [unique, not_null]
+      - name: logo_churn_rate
+        data_tests:
+          - value_between: { arguments: { min_value: 0, max_value: 1 } }
+      - name: net_mrr_retention_rate
+        description: (starting MRR + expansion - contraction - churn) / starting MRR, monthly.
+
+  - name: dim_accounts
+    description: One row per customer account with firmographics, lifecycle status and revenue.
+    columns:
+      - name: account_id
+        data_tests: [unique, not_null]
+      - name: customer_status
+        data_tests:
+          - accepted_values: { arguments: { values: [active, churned, never_activated] } }
+      - name: current_mrr_usd
+        data_tests: [not_null, non_negative]
+
+  - name: fct_cohort_retention
+    description: Logo retention and net revenue retention by monthly signup cohort and months since start.
+    data_tests:
+      - unique_combination: { arguments: { columns: [cohort_month, months_since_start] } }
+    columns:
+      - name: logo_retention
+        data_tests:
+          - value_between: { arguments: { min_value: 0, max_value: 1 } }
+
+  - name: mart_churn_features
+    description: >
+      Point-in-time feature table for churn modelling. One row per active account per
+      month-end snapshot; label = account's MRR drops to zero within the next
+      churn_horizon_months months.
+    columns:
+      - name: feature_row_id
+        data_tests: [unique, not_null]
+      - name: seat_utilization
+        data_tests: [non_negative]
+      - name: churned_within_horizon
+        description: Null when the full label horizon has not been observed yet (recent snapshots).

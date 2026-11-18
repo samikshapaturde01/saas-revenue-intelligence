@@ -1,0 +1,16 @@
+version: 2
+
+seeds:
+  - name: fx_rates_monthly
+    description: Monthly average FX rates used to convert invoice amounts to USD.
+    config:
+      column_types: { month: date, currency: varchar, usd_per_unit: "decimal(10,4)" }
+    columns:
+      - name: currency
+        data_tests:
+          - accepted_values: { arguments: { values: [USD, EUR, GBP] } }
+  - name: plan_catalog
+    description: Price book for each subscription plan.
+    columns:
+      - name: plan
+        data_tests: [unique, not_null]
